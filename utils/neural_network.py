@@ -203,15 +203,15 @@ class NeuralNetwork:
             if weight is not None:
                 connection.w = weight
 
-    def forwardPropagate(self, inputValues):
+    def forwardPropagate(self, inputData):
         """ perform forward propagation based on the input values
 
-        :inputValues: the list of input values to be used
+        :inputData: the list of input values to be used
         :returns: None
 
         """
-        self.validateDataI(inputValues)
-        self.setInputValues(inputValues)
+        self.validateDataI(inputData)
+        self.setInputValues(inputData)
         for layer in self.layers[1:]:
             for neuron in layer:
                 neuron.updateActivation()
@@ -248,6 +248,16 @@ class NeuralNetwork:
         self.forwardPropagate(self.getDataI(data))
         self.backPropagate(self.getDataO(data))
 
+    def batchTrain(self, dataSet):
+        """ train the network with an iterable of data
+
+        :dataSet: an iterable of data
+        :returns: None
+
+        """
+        for data in dataSet:
+            self.train(data)
+
     def predict(self, inputData):
         """ use the network to make prediction
 
@@ -258,16 +268,25 @@ class NeuralNetwork:
         self.forwardPropagate(inputData)
         return [ n.activation for n in self.layers[-1] ]
 
-    def computeError(self, inputData):
-        """TODO: Docstring for computeError.
+    def computeError(self, data):
+        """ compute the error for a particular data
 
-        :inputData: the data containing input and output
+        :data: the data containing input and output
         :returns: the error as a floating point number
 
         """
-        predicted = self.predict(self.getDataI(inputData))
-        target = self.getDataO(inputData)
+        predicted = self.predict(self.getDataI(data))
+        target = self.getDataO(data)
         return sum([ (a-b)**2 for a, b in zip(predicted, target) ])
+
+    def batchComputeError(self, dataSet):
+        """ compute the sum of error for a dataSet
+
+        :dataSet: an iterable of data
+        :returns: the error
+
+        """
+        return sum([ self.computeError(data) for data in dataSet ])
 
 
 def main():
@@ -296,7 +315,7 @@ def main():
     print(network)
 
     # propagate
-    dataSets = [
+    dataSet = [
             [1,1,0,1],
             [1,0,1,0],
             [0,1,1,0],
@@ -309,13 +328,11 @@ def main():
     # print(network)
 
     for epoch in range(500000):
-        sumError = 0
-        for data in dataSets:
-            network.train(data)
-            sumError += network.computeError(data)
+        network.batchTrain(dataSet)
+        sumError = network.batchComputeError(dataSet)
         if epoch % 10000 == 0:
             print(f"epoch: {epoch}, sumError: {sumError}")
-    for data in dataSets:
+    for data in dataSet:
         inputData = network.getDataI(data)
         result = network.predict(inputData)
         print("input:", inputData, "result:", result)
