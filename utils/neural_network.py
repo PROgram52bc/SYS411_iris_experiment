@@ -126,6 +126,32 @@ class NeuralNetwork:
 
         self.rate = rate
 
+    @property
+    def numInput(self):
+        return len(self.layers[0])
+
+    @property
+    def numOutput(self):
+        return len(self.layers[-1])
+
+    def validateDataIO(self, inputData):
+        if len(inputData) != self.numInput + self.numOutput:
+            raise ValueError(f"data for training has an invalid length {len(inputData)}. Expected {self.numInput + self.numOutput}")
+
+    def validateDataI(self, inputData):
+        if len(inputData) != self.numInput:
+            raise ValueError(f"data for prediction has an invalid length {len(inputData)}. Expected {self.numInput}")
+
+    def validateDataO(self, inputData):
+        if len(inputData) != self.numOutput:
+            raise ValueError(f"data for back propagation has an invalid length {len(inputData)}. Expected {self.numOutput}")
+
+    def getDataI(self, inputData):
+        return inputData[:self.numInput]
+
+    def getDataO(self, inputData):
+        return inputData[self.numInput:]
+
     def __repr__(self):
         s = "NeuralNetwork(\n"
         for i, layer in enumerate(self.layers):
@@ -184,8 +210,7 @@ class NeuralNetwork:
         :returns: None
 
         """
-        if len(inputValues) != len(self.layers[0]):
-            raise Exception(f"inputValues has {len(inputValues)} values while the first layer has {len(self.layers[0])} nodes")
+        self.validateDataI(inputValues)
         self.setInputValues(inputValues)
         for layer in self.layers[1:]:
             for neuron in layer:
@@ -198,8 +223,7 @@ class NeuralNetwork:
         :returns: None
 
         """
-        if len(targetValues) != len(self.layers[-1]):
-            raise Exception(f"targetValues has {len(targetValues)} values while the output layer has {len(self.layers[-1])} nodes")
+        self.validateDataO(targetValues)
         for targetValue, neuron in zip(targetValues, self.layers[-1]):
             neuron.updateErrDrv(targetValue)
 
@@ -221,12 +245,8 @@ class NeuralNetwork:
         :returns: None
 
         """
-        isize = len(self.layers[0])
-        osize = len(self.layers[-1])
-        if len(data) != isize + osize:
-            raise Exception(f"data has {len(data)} values while the network accepts data of length {isize+osize}")
-        self.forwardPropagate(data[:isize])
-        self.backPropagate(data[isize:])
+        self.forwardPropagate(self.getDataI(data))
+        self.backPropagate(self.getDataO(data))
 
     def predict(self, inputData):
         """ use the network to make prediction
@@ -237,6 +257,17 @@ class NeuralNetwork:
         """
         self.forwardPropagate(inputData)
         return [ n.activation for n in self.layers[-1] ]
+
+    def computeError(self, inputData):
+        """TODO: Docstring for computeError.
+
+        :inputData: the data containing input and output
+        :returns: the error as a floating point number
+
+        """
+        predicted = self.predict(self.getDataI(inputData))
+        target = self.getDataO(inputData)
+        return sum([ (a-b)**2 for a, b in zip(predicted, target) ])
 
 
 def main():
@@ -278,17 +309,16 @@ def main():
     # print(network)
 
     for epoch in range(500000):
-        sum_error = 0
+        sumError = 0
         for data in dataSets:
             network.train(data)
-            result = network.predict(data[:2])
-            target = data[2:]
-            sum_error += sum([(result[i]-target[i])**2 for i in range(2)])
+            sumError += network.computeError(data)
         if epoch % 10000 == 0:
-            print(f"epoch: {epoch}, sum_error: {sum_error}")
+            print(f"epoch: {epoch}, sumError: {sumError}")
     for data in dataSets:
-        result = network.predict(data[:2])
-        print("input:", data[:2], "result:", result)
+        inputData = network.getDataI(data)
+        result = network.predict(inputData)
+        print("input:", inputData, "result:", result)
 
 if __name__ == "__main__":
     main()
