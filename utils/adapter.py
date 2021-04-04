@@ -2,7 +2,7 @@ import pprint
 import csv
 import itertools
 import random
-from fragmentation import stratify, fragment
+from .fragmentation import stratify, fragment
 
 class Adapter:
     """ An abstract class that adapts input data to a neural network compatible input data """
@@ -72,15 +72,16 @@ class IrisDataRotationAdapter(Adapter):
             # rotate
             data.insert(0, data.pop())
 
-def main():
-    pp = pprint.PrettyPrinter(indent=2)
-    with open("../data/Iris.csv") as f:
-        reader = csv.reader(f)
-        next(reader) # skip first line
-        data = list(reader)
-    data = IrisDataRotationAdapter.adapt(data)
-    for i, rotation in enumerate(data):
-        print("Rotation: {}".format(i))
-        pp.pprint(rotation)
+# def main():
+#     pp = pprint.PrettyPrinter(indent=2)
+#     with open("../data/Iris.csv") as f:
+#         reader = csv.reader(f)
+#         next(reader) # skip first line
+#         data = list(reader)
+#     data = IrisDataRotationAdapter.adapt(data)
+#     for i, rotation in enumerate(data):
+#         print("Rotation: {}".format(i))
+#         pp.pprint(rotation)
 
-main()
+# if __name__ == "__main__":
+#     main()
