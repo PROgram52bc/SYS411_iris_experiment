@@ -5,11 +5,11 @@ from statistics import mean
 from utils import NeuralNetwork, IrisDataRotationAdapter
 
 DEBUG_LEVEL = 5
-
+FLUSH_LEVEL = 3
 
 def D(level, msg):
     if DEBUG_LEVEL >= level:
-        print("[{}] {}".format(level, msg))
+        print("[{}] {}".format(level, msg), flush=FLUSH_LEVEL>=level)
 
 def main():
     pp = pprint.PrettyPrinter(indent=2)
@@ -21,11 +21,10 @@ def main():
     data = list(data)
     D(1, "Successfully adapted data")
 
-    # for dataset in five dataset rotations:
     lRates = [0.02, 0.2, 1]
     nNodes = range(2,8)
     nIteration = 3
-    maxEpoch = 10
+    maxEpoch = 10000
 
     # record the errors
     errors = {}
