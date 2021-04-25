@@ -1,3 +1,4 @@
+import operator
 from math import exp
 from random import uniform
 
@@ -268,6 +269,29 @@ class NeuralNetwork:
         self.forwardPropagate(inputData)
         return [ n.activation for n in self.layers[-1] ]
 
+    def getPredominantIndex(self, activations):
+        """ get the index that has the maximum value
+
+        :activations: a list of activation levels
+        :returns: TODO
+
+        """
+        max_value = max(activations)
+        index = activations.index(max_value)
+        # # equivalent
+        # index, max_value = max(enumerate(activations), key=operator.itemgetter(1))
+        return index
+
+    def predictOne(self, inputData):
+        """ predict one result using the output that has the most activation
+
+        :inputData: TODO
+        :returns: the number of output node that has the most activation, starting from 0
+
+        """
+        activations = self.predict(inputData)
+        return self.getPredominantIndex(activations)
+
     def computeError(self, data):
         """ compute the error for a particular data
 
@@ -287,6 +311,18 @@ class NeuralNetwork:
 
         """
         return sum([ self.computeError(data) for data in dataSet ])
+
+    def batchComputeAccuracy(self, dataSet):
+        """ compute the average accuracy by using the predictOne prediction
+
+        :data: an iterable of data, where the output value in the data is an index of the output node rather than individual nodes.
+        :returns: the accuracy
+
+        """
+        return sum([
+            float(self.predictOne(self.getDataI(data)) == self.getPredominantIndex(self.getDataO(data)))
+            for data in dataSet
+        ])/len(dataSet)
 
 
 def main():
@@ -327,11 +363,13 @@ def main():
     # network.backPropagate([0,1])
     # print(network)
 
-    for epoch in range(500000):
+    for epoch in range(50000):
         network.batchTrain(dataSet)
-        sumError = network.batchComputeError(dataSet)
         if epoch % 10000 == 0:
+            sumError = network.batchComputeError(dataSet)
             print(f"epoch: {epoch}, sumError: {sumError}")
+            accuracy = network.batchComputeAccuracy(dataSet)
+            print(f"accuracy: {accuracy}")
     for data in dataSet:
         inputData = network.getDataI(data)
         result = network.predict(inputData)
